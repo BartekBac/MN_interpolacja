@@ -60,12 +60,10 @@ vector<double> wyznaczWezly(int n,int a,int b,bool optymalne)
 	else
 	{
 		double p = (double)(b-a)/n;
-		//cout << p<< endl;
 		for(int i =0;i<(n+1);i++)
 		{
 			
 			double x = a + (i*p);
-			//cout << x<< endl;
 			vectorDoZwrotu.push_back(x);
 		}
 	}
@@ -80,16 +78,25 @@ vector<double> wyznaczWartosciFunkcjiInterpolowanej(vector<double> &wezly)
 	}
 	return vectorDoZwrotu;
 }
+vector<double> wyznaczBladInterpolacji(vector<double> funkcjaInterpolowana, vector<double> wartosciWielomianuLagrange)
+{
+	vector<double> vectorDoZwrotu;
+	for (int i = 0; i<funkcjaInterpolowana.size(); i++)
+	{
+		vectorDoZwrotu.push_back(abs(funkcjaInterpolowana[i]-wartosciWielomianuLagrange[i]));
+	}
+	return vectorDoZwrotu;
+}
 vector<double> wyznaczWartosciWielomanuLagrange(vector<double> punkty,int n,vector<double> wartosciFunkcjiInterpolowanej,vector<double> wezly)	
 {
 	vector<double> vectorDoZwrotu;
 	for(int k =0;k<punkty.size();k++)
 	{
 		double wynik=0;
-		for(int i=0;i<n;i++)
+		for(int i=0;i<=n;i++)
 		{
 			double wynikIloczynu = 1;
-			for(int j=0;j<n;j++)
+			for(int j=0;j<=n;j++)
 			{
 				if(i!=j)
 				{
@@ -118,25 +125,9 @@ void Wyjscie(int n,int np,int a,int b,bool optymalnie)
 	{
 		nazwa+= "_row";
 	}
-	//nazwa += ".txt";
-	fstream plik, plik2;
-	plik.open(nazwa+".txt", ios_base::out);
-	plik2.open(nazwa + ".csv", ios_base::out);
-	if(!plik.good())
-	{
-		cout <<"LIPA";
-		return;
-	}
-	plik << "n="<<n<<", "<< "np="<<np<<", "<< "a="<<a<<", "<< "b="<<b<<", ";
-	if(optymalnie)
-	{
-		plik << "optymanie";
-	}
-	else
-	{
-		plik << "rownoodlegle";
-	}
-	plik <<endl;
+	fstream plik;
+	plik.open(nazwa + ".csv", ios_base::out);
+
 	
 	
 	vector<double> punktyX = wyznaczWezly(np,a,b,false);
@@ -144,16 +135,15 @@ void Wyjscie(int n,int np,int a,int b,bool optymalnie)
 	vector<double> wezly = wyznaczWezly(n,a,b,optymalnie);
 	vector<double> wartosciFunkcjiInterpolowanejDlaWezlow = wyznaczWartosciFunkcjiInterpolowanej(wezly); 
 	vector<double> wartosciWielomianuLagrange = wyznaczWartosciWielomanuLagrange(punktyX,n,wartosciFunkcjiInterpolowanejDlaWezlow,wezly);
-	
-	//plik << "punktyX | wartoœci funkcji interpolowanej | wartoœci wielomianu Lagrange'a'"<< endl;
-	plik2 << "x,y,L\n";
+	vector<double> blad = wyznaczBladInterpolacji(wartosciFunkcjiInterpolowanej, wartosciWielomianuLagrange);
+	plik << "x,y,L,b,w,fw\n";
 	for(int i=0;i<np+1;i++)
 	{
-		plik2 << punktyX[i] << "," << wartosciFunkcjiInterpolowanej[i] << "," << wartosciWielomianuLagrange[i] << endl;
-		plik << setprecision(4) << punktyX[i] <<" | " << wartosciFunkcjiInterpolowanej[i]<<" | " << wartosciWielomianuLagrange[i] <<endl;
+		plik << punktyX[i] << "," << wartosciFunkcjiInterpolowanej[i] << "," << wartosciWielomianuLagrange[i] << "," << blad[i];
+		if (i < wezly.size()) plik << "," << wezly[i] <<","<< wartosciFunkcjiInterpolowanejDlaWezlow[i];
+		plik << endl;
 	}
 	plik.close();
-	plik2.close();
 	
 		
 }
@@ -165,7 +155,6 @@ int main()
 	//int b;
 	//bool optymalnie;
 	
-	//cout<< (double)abs(cos(-3.0)*(-3.0)) <<endl;
 	
 	//Wejscie(n,np,a,b,optymalnie);
 	//Wyjscie(n, np, a, b, optymalnie);
